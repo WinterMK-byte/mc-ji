@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麦记 · 营养手账（Markdown 日记 + 麦当劳营养数据）</title>
+<style>
+:root{
+  --bg:oklch(0.965 0.014 86);
+  --surface:oklch(0.985 0.010 88);
+  --ink:oklch(0.30 0.025 55);
+  --muted:oklch(0.53 0.02 60);
+  --accent:oklch(0.52 0.13 38);
+  --accent-soft:oklch(0.52 0.13 38 / 0.10);
+  --green:oklch(0.44 0.08 155);
+  --code-bg:oklch(0.935 0.016 86);
+  --line:oklch(0.88 0.02 80);
+  --shadow:oklch(0.40 0.03 60 / 0.12);
+  --font-serif:"Noto Serif SC","Source Han Serif SC","Songti SC",SimSun,serif;
+  --font-sans:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --font-mono:ui-monospace,"Cascadia Code",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:oklch(0.25 0.02 60);
+    --surface:oklch(0.30 0.022 60);
+    --ink:oklch(0.90 0.015 80);
+    --muted:oklch(0.72 0.02 70);
+    --accent:oklch(0.70 0.13 42);
+    --accent-soft:oklch(0.70 0.13 42 / 0.16);
+    --green:oklch(0.70 0.09 155);
+    --code-bg:oklch(0.34 0.025 60);
+    --line:oklch(0.42 0.025 60);
+    --shadow:oklch(0.10 0.02 60 / 0.4);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--font-sans);line-height:1.7;
+  min-height:100vh;
+}
+::selection{background:var(--accent);color:oklch(0.98 0.01 85)}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- 页头 ---------- */
+.masthead{
+  padding:clamp(2rem,5vw,4rem) clamp(1.2rem,4vw,3rem) 1.2rem;
+  background:
+    radial-gradient(120% 140% at 85% -20%, var(--accent-soft), transparent 55%),
+    var(--bg);
+  border-bottom:1px solid var(--line);
+}
+.masthead-inner{max-width:1100px;margin:0 auto}
+.kicker{
+  font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.35em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:0.7rem;
+}
+h1{
+  font-family:var(--font-serif);font-weight:600;
+  font-size:clamp(2.2rem,5.5vw,3.6rem);letter-spacing:0.02em;
+}
+h1 .dot{color:var(--accent);padding:0 0.2em}
+.sub{color:var(--muted);margin-top:0.5rem;font-size:clamp(0.95rem,2vw,1.05rem)}
+
+.tabs{
+  display:flex;gap:0.5rem;max-width:1100px;margin:1.4rem auto 0;
+  padding:0 clamp(1.2rem,4vw,3rem);
+}
+.tab{
+  border:0;background:transparent;color:var(--muted);
+  font-size:1rem;font-weight:600;padding:0.65rem 1.4rem;
+  border-radius:999px;transition:background .15s ease,color .15s ease;
+}
+.tab:hover{background:var(--accent-soft);color:var(--ink)}
+.tab.is-active{background:var(--accent);color:oklch(0.985 0.01 88)}
+
+/* ---------- 面板 ---------- */
+main{max-width:1100px;margin:0 auto;padding:clamp(1.2rem,4vw,2.5rem) clamp(1.2rem,4vw,3rem) 4rem}
+.panel{display:none}
+.panel.is-active{display:block;animation:fadein .25s ease-out}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- md 简介 ---------- */
+.intro-block{
+  background:var(--surface);border-radius:18px;
+  box-shadow:0 1px 2px var(--shadow),0 14px 34px var(--shadow);
+  padding:clamp(1.2rem,3vw,1.8rem);margin-bottom:2.2rem;
+  display:grid;grid-template-columns:auto 1fr;gap:1rem;align-items:start;
+}
+.intro-mark{
+  font-family:var(--font-serif);font-size:1.6rem;color:var(--accent);
+  background:var(--accent-soft);width:3rem;height:3rem;display:flex;
+  align-items:center;justify-content:center;border-radius:14px;flex:none;
+}
+.intro-block h2{font-family:var(--font-serif);font-size:1.25rem;margin-bottom:0.4rem}
+.intro-block p{color:var(--muted);font-size:0.95rem}
+.intro-block strong{color:var(--ink);font-weight:700}
+.intro-block ul{margin-top:0.6rem;padding-left:1.2rem;color:var(--muted);font-size:0.92rem}
+.intro-block li{margin:0.2rem 0}
+
+/* ---------- 教学单元 ---------- */
+.lesson{
+  background:var(--surface);border-radius:18px;
+  box-shadow:0 1px 2px var(--shadow),0 14px 34px var(--shadow);
+  padding:clamp(1.2rem,3vw,1.8rem);margin-bottom:1.6rem;
+}
+.lesson-head{display:flex;align-items:center;gap:0.9rem;flex-wrap:wrap}
+.lesson-num{
+  font-family:var(--font-mono);font-size:0.8rem;color:var(--accent);
+  border:1px solid color-mix(in oklch,var(--accent) 45%,transparent);
+  border-radius:8px;padding:0.15rem 0.5rem;
+}
+.lesson-head h2{font-family:var(--font-serif);font-size:1.35rem;font-weight:600;flex:1}
+.copy-btn{
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  font-size:0.82rem;border-radius:8px;padding:0.35rem 0.85rem;
+  transition:all .15s ease;
+}
+.copy-btn:hover{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.lesson-desc{color:var(--muted);font-size:0.94rem;margin:0.7rem 0 1rem}
+.lesson-body{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:720px){.lesson-body{grid-template-columns:1fr}}
+.lesson-code{
+  background:var(--code-bg);border-radius:12px;overflow:auto;
+  border:1px solid var(--line);
+}
+.lesson-code pre{font-family:var(--font-mono);font-size:0.86rem;line-height:1.65;padding:1rem}
+.lesson-preview{
+  background:var(--bg);border-radius:12px;border:1px dashed var(--line);
+  padding:1rem;min-height:4rem;
+}
+
+/* ---------- Markdown 渲染样式 ---------- */
+.md-preview{font-size:0.95rem;overflow-wrap:break-word}
+.md-preview h1,.md-preview h2,.md-preview h3,.md-preview h4{font-family:var(--font-serif);line-height:1.4;margin:0.8em 0 0.4em}
+.md-preview h1{font-size:1.5em}
+.md-preview h2{font-size:1.25em;border-bottom:1px solid var(--line);padding-bottom:0.25em}
+.md-preview h3{font-size:1.1em}
+.md-preview p{margin:0.45em 0}
+.md-preview ul,.md-preview ol{padding-left:1.4em;margin:0.45em 0}
+.md-preview li{margin:0.15em 0}
+.md-preview strong{font-weight:700}
+.md-preview em{color:var(--green)}
+.md-preview del{opacity:0.55}
+.md-preview code{
+  font-family:var(--font-mono);font-size:0.86em;background:var(--code-bg);
+  border:1px solid var(--line);border-radius:5px;padding:0.05em 0.35em;
+}
+.md-preview pre{
+  background:var(--code-bg);border:1px solid var(--line);border-radius:10px;
+  padding:0.9rem 1rem;overflow:auto;margin:0.6em 0;
+}
+.md-preview pre code{background:transparent;border:0;padding:0;font-size:0.85em}
+.md-preview blockquote{
+  border-left:3px solid var(--accent);padding:0.3rem 1rem;margin:0.6em 0;
+  color:var(--muted);background:var(--accent-soft);border-radius:0 8px 8px 0;
+}
+.md-preview a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.md-preview img{max-width:100%;border-radius:10px;display:block;margin:0.6em 0}
+.md-preview hr{border:0;border-top:1px solid var(--line);margin:1em 0}
+.md-preview table{border-collapse:collapse;margin:0.7em 0;font-size:0.9em;width:100%}
+.md-preview th,.md-preview td{border:1px solid var(--line);padding:0.4em 0.7em;text-align:left}
+.md-preview th{background:var(--code-bg);font-weight:600}
+
+/* ---------- 日记区 ---------- */
+.toolbar{
+  display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:1rem;
+}
+.tool-btn{
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font-size:0.9rem;font-weight:600;border-radius:10px;padding:0.5rem 1rem;
+  transition:all .15s ease;
+}
+.tool-btn:hover{background:var(--accent-soft);border-color:transparent}
+.tool-btn.primary{background:var(--accent);border-color:transparent;color:oklch(0.985 0.01 88)}
+.tool-btn.primary:hover{filter:brightness(1.08)}
+.tool-btn.danger:hover{background:color-mix(in oklch,var(--accent) 18%,transparent);color:var(--accent)}
+.toolbar .meta{margin-left:auto;display:flex;align-items:center;gap:1rem;color:var(--muted);font-size:0.85rem}
+.autosave{color:var(--green);font-size:0.82rem}
+
+.diary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:stretch}
+@media(max-width:900px){.diary-grid{grid-template-columns:1fr}}
+.editor-col,.preview-col{
+  background:var(--surface);border-radius:18px;
+  box-shadow:0 1px 2px var(--shadow),0 14px 34px var(--shadow);
+  overflow:hidden;display:flex;flex-direction:column;
+}
+.col-label{
+  font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.25em;
+  text-transform:uppercase;color:var(--muted);padding:0.85rem 1.2rem 0.5rem;
+  border-bottom:1px solid var(--line);
+}
+.fmtbar{
+  display:flex;flex-wrap:wrap;gap:0.4rem;padding:0.55rem 1.2rem;
+  border-bottom:1px solid var(--line);
+  background:color-mix(in oklch,var(--bg) 55%,transparent);
+}
+.fmt-btn{
+  font-family:var(--font-mono);font-size:0.76rem;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;
+  padding:0.28rem 0.6rem;transition:all .15s ease;
+}
+.fmt-btn:hover{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.fmt-btn:active{transform:translateY(1px)}
+#editor{
+  flex:1;min-height:55vh;border:0;resize:none;padding:1.2rem;
+  background:transparent;color:var(--ink);
+  font-family:var(--font-mono);font-size:0.95rem;line-height:1.8;
+}
+#editor::placeholder{color:color-mix(in oklch,var(--muted) 60%,transparent)}
+#preview{padding:1.2rem;overflow:auto;min-height:55vh}
+.preview-empty{color:var(--muted);font-size:0.9rem;padding:2rem 0;text-align:center}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--bg);padding:0.6rem 1.3rem;border-radius:999px;
+  font-size:0.9rem;opacity:0;pointer-events:none;transition:all .25s ease-out;
+  z-index:99;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+footer{
+  max-width:1100px;margin:0 auto;padding:0 clamp(1.2rem,4vw,3rem) 2.5rem;
+  color:var(--muted);font-size:0.82rem;border-top:1px solid var(--line);
+}
+footer p{max-width:1100px;margin:1.2rem auto 0}
+.author-line{font-family:var(--font-mono);font-size:0.78rem;color:var(--muted);margin-top:0.6rem;letter-spacing:0.05em}
+.work-block{background:var(--surface);border-radius:18px;box-shadow:0 1px 2px var(--shadow),0 14px 34px var(--shadow);padding:clamp(1.2rem,3vw,1.8rem);margin-bottom:1.6rem;border-left:4px solid var(--accent)}
+.work-head h2,.work-block h2{font-family:var(--font-serif);font-size:1.4rem;margin-bottom:0.5rem}
+.work-block p{color:var(--muted);font-size:0.95rem;max-width:62ch;line-height:1.7}
+.work-badge{display:inline-block;font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.3em;color:var(--accent);border:1px solid color-mix(in oklch,var(--accent) 45%,transparent);padding:0.2rem 0.7rem;border-radius:6px;margin-bottom:0.7rem}
+.work-meta{display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap}
+.work-meta span{font-family:var(--font-mono);font-size:0.74rem;color:var(--ink);background:var(--code-bg);border:1px solid var(--line);border-radius:999px;padding:0.2rem 0.8rem}
+@media(max-width:720px){
+  .fmtbar{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .fmt-btn{flex:none}
+  .lesson-body{grid-template-columns:1fr}
+}
+
+/* ---------- 今日餐盘（麦记新增） ---------- */
+.plate-wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:1.2rem;align-items:start}
+@media(max-width:900px){.plate-wrap{grid-template-columns:1fr}}
+.plate-card{background:var(--surface);border-radius:18px;box-shadow:0 1px 2px var(--shadow),0 14px 34px var(--shadow);padding:1.1rem 1.2rem}
+.plate-card h2{font-family:var(--font-serif);font-size:1.15rem;margin-bottom:.7rem}
+.snap-meta{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);margin-bottom:.9rem;display:flex;gap:.45rem;flex-wrap:wrap}
+.snap-meta .pill{border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem}
+.snap-meta .live{color:var(--green);border-color:color-mix(in oklch,var(--green) 45%,transparent)}
+.dish-list{display:flex;flex-direction:column;gap:.4rem;max-height:44vh;overflow:auto;padding-right:.2rem}
+.dish{display:flex;align-items:center;gap:.6rem;border:1px solid var(--line);border-radius:10px;padding:.45rem .7rem;background:var(--bg);transition:all .15s ease}
+.dish:hover{border-color:var(--accent);background:var(--accent-soft)}
+.dish .nm{flex:1;font-size:.92rem}
+.dish .kc{font-family:var(--font-mono);font-size:.76rem;color:var(--muted)}
+.dish button{border:0;background:var(--accent);color:oklch(.985 .01 88);border-radius:8px;padding:.18rem .58rem;font-size:.85rem;line-height:1.4}
+.plate-items{display:flex;flex-direction:column;gap:.4rem;min-height:3rem}
+.plate-item{display:flex;align-items:center;gap:.6rem;font-size:.9rem;border-bottom:1px dashed var(--line);padding-bottom:.35rem}
+.plate-item .kc{font-family:var(--font-mono);font-size:.76rem;color:var(--muted)}
+.plate-item .x{margin-left:auto;border:0;background:transparent;color:var(--muted);font-size:1.05rem;line-height:1}
+.plate-item .x:hover{color:var(--accent)}
+.nutri-rows{margin-top:.9rem;display:flex;flex-direction:column;gap:.55rem}
+.nrow{font-size:.82rem}
+.nrow .lab{display:flex;justify-content:space-between;font-family:var(--font-mono);color:var(--muted);margin-bottom:.2rem}
+.nrow .bar{height:7px;border-radius:999px;background:var(--code-bg);overflow:hidden}
+.nrow .fill{height:100%;background:var(--accent);border-radius:999px;transition:width .3s ease}
+.nrow .fill.warn{background:oklch(.62 .15 60)}
+.nrow .fill.over{background:oklch(.55 .18 25)}
+.plate-actions{display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
+.plate-empty{color:var(--muted);font-size:.88rem;padding:.8rem 0}
+.coupon-list{margin-top:.6rem;display:flex;flex-direction:column;gap:.32rem}
+.coupon{font-size:.82rem;color:var(--muted);display:flex;gap:.5rem;flex-wrap:wrap}
+.coupon b{color:var(--ink);font-weight:600}
+.disc{font-size:.74rem;color:var(--muted);margin-top:1rem;border-top:1px solid var(--line);padding-top:.6rem;line-height:1.6}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <p class="kicker">1024 PROGRAMMER'S DAY · 作品展示</p>
+    <h1>麦记<span class="dot">·</span>营养手账</h1>
+    <p class="sub">写日记 + 记餐盘 · 对接麦当劳 MCP 营养数据 · 单文件 · 零依赖</p>
+    <p class="author-line">作者：马可轩 · 独立开发 · 麦当劳 MCP 创意开发大赛参赛作品</p>
+  </div>
+  <nav class="tabs">
+    <button class="tab is-active" data-tab="learn">学语法</button>
+    <button class="tab" data-tab="write">写日记</button>
+    <button class="tab" data-tab="meal">今日餐盘</button>
+  </nav>
+</header>
+
+<main>
+  <!-- 学习面板 -->
+  <section id="panel-learn" class="panel is-active">
+    <div class="work-block">
+      <span class="work-badge">PROJECT</span>
+      <h2>墨记 · Markdown 手账本</h2>
+      <p>为 1024 程序员节打造的单文件网页作品：学 Markdown 语法、写日记、一键导出 .md。整站只有一个 HTML 文件，内置自写 Markdown 解析器，无 CDN、无依赖、断网可用。</p>
+      <div class="work-meta"><span>纯前端</span><span>零依赖</span><span>离线可用</span><span>自动存草稿</span><span>导出 .md</span></div>
+    </div>
+    <div class="intro-block">
+      <div class="intro-mark">.md</div>
+      <div>
+        <h2>md 文件是什么？</h2>
+        <p><strong>.md 就是 Markdown 文件</strong>：用普通文本写带格式的内容（标题、列表、加粗、表格…），任何电脑都能打开，永远不会“坏档”。写完还能转成网页、PDF。</p>
+        <ul>
+          <li>写日记、笔记、文档、说明手册都在用它</li>
+          <li>GitHub、知识库、程序员的 README 全是 md</li>
+          <li>本页右侧预览的格式，就是你的文本渲染后的样子</li>
+        </ul>
+      </div>
+    </div>
+    <div id="lessons"></div>
+  </section>
+
+  <!-- 日记面板 -->
+  <section id="panel-write" class="panel">
+    <div class="toolbar">
+      <button class="tool-btn" id="btn-date">插入今日日期</button>
+      <button class="tool-btn primary" id="btn-export">导出 .md · 自选文件夹</button>
+      <button class="tool-btn" id="btn-discard">放弃草稿</button>
+      <button class="tool-btn danger" id="btn-clear">清空</button>
+      <span class="meta"><span id="wordcount">0 字</span><span class="autosave">草稿仅缓存在本浏览器，不点导出就不生成文件</span></span>
+    </div>
+    <div class="diary-grid">
+      <div class="editor-col">
+        <div class="col-label">编辑区 · Markdown</div>
+        <textarea id="editor" spellcheck="false" placeholder="今天想写点什么？
+
+试试： # 今天，  **加粗**， - 列表项…（学不会就点上面的「学语法」）"></textarea>
+      </div>
+      <div class="preview-col">
+        <div class="col-label">预览区 · 渲染效果</div>
+        <div id="preview" class="md-preview"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 今日餐盘面板（麦记新增） -->
+  <section id="panel-meal" class="panel">
+    <div class="work-block">
+      <span class="work-badge">MCD MCP</span>
+      <h2>今日餐盘 · 吃完顺手记一笔</h2>
+      <p>选今天吃的餐品，自动累计热量与三大营养素，一键写成 Markdown 表格塞进日记。餐品与营养数据来自麦当劳 MCP 服务；未连接时用离线快照演示，界面会标明数据来源。</p>
+      <div class="work-meta"><span>真实 MCP 数据</span><span>自动算热量</span><span>写入日记</span><span>券到期提醒</span></div>
+    </div>
+    <div class="plate-wrap">
+      <div class="plate-card">
+        <h2>选餐品</h2>
+        <div class="snap-meta" id="snap-meta"></div>
+        <div class="dish-list" id="dish-list"></div>
+        <div id="coupon-box"></div>
+      </div>
+      <div class="plate-card">
+        <h2>今日累计</h2>
+        <div class="plate-items" id="plate-items"></div>
+        <div class="nutri-rows" id="nutri-rows"></div>
+        <div class="plate-actions">
+          <button class="tool-btn primary" id="btn-meal-to-diary">写入日记</button>
+          <button class="tool-btn" id="btn-meal-reset">清空餐盘</button>
+        </div>
+        <p class="disc">营养参考值按一般成人估算，不构成医疗或营养建议；餐品、价格与供应状态以麦当劳官方渠道的实时结果为准。</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>墨记手账本 · 1024 程序员节作品 · 单文件零依赖 · 草稿仅缓存本浏览器，点「导出 .md」才保存文件（可自选文件夹），点「放弃草稿」则不留下任何内容。</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+
+<!-- 营养数据（由 tools/sync_nutrition.py 从麦当劳 MCP 刷新；内嵌以保证 file:// 双击可用） -->
+<script id="nutrition-data" type="application/json">
+{
+ "source": "offline",
+ "source_label": "离线演示快照",
+ "items": [
+  {
+   "code": "big-mac",
+   "name": "巨无霸",
+   "category": "汉堡",
+   "energy_kcal": 550,
+   "protein_g": 25.0,
+   "fat_g": 30.0,
+   "carb_g": 42.0,
+   "sodium_mg": 950,
+   "price_cny": 25.0
+  },
+  {
+   "code": "mcchicken",
+   "name": "麦香鸡",
+   "category": "汉堡",
+   "energy_kcal": 400,
+   "protein_g": 15.0,
+   "fat_g": 21.0,
+   "carb_g": 39.0,
+   "sodium_mg": 700,
+   "price_cny": 14.0
+  },
+  {
+   "code": "spicy-chicken-burger",
+   "name": "麦辣鸡腿堡",
+   "category": "汉堡",
+   "energy_kcal": 500,
+   "protein_g": 22.0,
+   "fat_g": 25.0,
+   "carb_g": 45.0,
+   "sodium_mg": 1000,
+   "price_cny": 22.0
+  },
+  {
+   "code": "fries-m",
+   "name": "薯条（中）",
+   "category": "小食",
+   "energy_kcal": 340,
+   "protein_g": 4.0,
+   "fat_g": 16.0,
+   "carb_g": 44.0,
+   "sodium_mg": 250,
+   "price_cny": 12.0
+  },
+  {
+   "code": "nuggets-5",
+   "name": "麦乐鸡（5 块）",
+   "category": "小食",
+   "energy_kcal": 230,
+   "protein_g": 14.0,
+   "fat_g": 13.0,
+   "carb_g": 15.0,
+   "sodium_mg": 460,
+   "price_cny": 13.0
+  },
+  {
+   "code": "coke-m",
+   "name": "可口可乐（中）",
+   "category": "饮料",
+   "energy_kcal": 200,
+   "protein_g": 0.0,
+   "fat_g": 0.0,
+   "carb_g": 50.0,
+   "sodium_mg": 15,
+   "price_cny": 10.0
+  },
+  {
+   "code": "sundae",
+   "name": "朱古力圣代",
+   "category": "甜品",
+   "energy_kcal": 280,
+   "protein_g": 6.0,
+   "fat_g": 8.0,
+   "carb_g": 45.0,
+   "sodium_mg": 130,
+   "price_cny": 9.0
+  },
+  {
+   "code": "corn-cup",
+   "name": "玉米杯",
+   "category": "小食",
+   "energy_kcal": 100,
+   "protein_g": 3.0,
+   "fat_g": 2.0,
+   "carb_g": 19.0,
+   "sodium_mg": 150,
+   "price_cny": 10.0
+  }
+ ],
+ "coupons": [
+  {
+   "name": "示例券：满 30 减 5",
+   "expire_text": "演示数据"
+  },
+  {
+   "name": "示例券：中薯买一送一",
+   "expire_text": "演示数据"
+  }
+ ],
+ "note": "离线演示快照：数值为近似演示值，非麦当劳官方实时结果。设置 MCD_MCP_TOKEN 后重新运行可获取真实数据。",
+ "generated_at": "2026-10-22T14:32:28"
+}
+</script>
+<script>
+/* ---------- 简易 Markdown 解析器（离线可用） ---------- */
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function inline(s){
+  var codes=[];
+  s=s.replace(/`([^`\n]+)`/g,function(m,c){codes.push('<code>'+escapeHtml(c)+'</code>');return '\u0001'+(codes.length-1)+'\u0001';});
+  s=s.replace(/!\[([^\]\n]+)\]\((https?:\/\/[^)\s]+|data:image\/[^)\s]+)\)/g,'<img src="$2" alt="$1" loading="lazy">');
+  s=s.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+  s=s.replace(/~~([^~\n]+)~~/g,'<del>$1</del>');
+  s=s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  s=s.replace(/\u0001(\d+)\u0001/g,function(m,i){return codes[+i]||'';});
+  return s;
+}
+function parseRow(line){
+  var l=line.trim().replace(/^\|/,'').replace(/\|$/,'');
+  return l.split('|');
+}
+function isTableSep(l){
+  return /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(l) && l.indexOf('-')>-1;
+}
+function renderMarkdown(src){
+  if(!src.trim()) return '';
+  var lines=String(src).replace(/\r\n/g,'\n').split('\n');
+  var out=[],i=0;
+  while(i<lines.length){
+    var line=lines[i];
+    /* 代码块 */
+    if(/^\s*```/.test(line)){
+      var lang=line.replace(/^\s*```\s*/,'').trim();
+      var buf=[];
+      i++;
+      while(i<lines.length && !/^\s*```/.test(lines[i])){buf.push(lines[i]);i++;}
+      i++;
+      out.push('<pre><code>'+(lang?'<span class="lang">'+escapeHtml(lang)+'</span>\n':'')+escapeHtml(buf.join('\n'))+'</code></pre>');
+      continue;
+    }
+    /* 表格 */
+    if(line.trim().indexOf('|')===0 && i+1<lines.length && isTableSep(lines[i+1])){
+      var header=parseRow(line);i+=2;var rows=[];
+      while(i<lines.length && lines[i].trim().indexOf('|')===0){rows.push(parseRow(lines[i]));i++;}
+      var html='<table><thead><tr>'+header.map(function(h){return '<th>'+inline(h.trim())+'</th>';}).join('')+'</tr></thead><tbody>';
+      html+=rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+inline(c.trim())+'</td>';}).join('')+'</tr>';}).join('');
+      out.push(html+'</tbody></table>');
+      continue;
+    }
+    /* 标题 */
+    var h=line.match(/^(#{1,6})\s+(.*)$/);
+    if(h){var n=h[1].length;out.push('<h'+n+'>'+inline(h[2])+'</h'+n+'>');i++;continue;}
+    /* 分隔线 */
+    if(/^\s*(---+|\*\*\*+)\s*$/.test(line)){out.push('<hr>');i++;continue;}
+    /* 引用 */
+    if(/^\s*&gt;\s*/.test(line)||/^\s*>\s*/.test(line)){
+      var q=[];
+      while(i<lines.length&&(/^\s*&gt;\s*/.test(lines[i])||/^\s*>\s*/.test(lines[i]))){q.push(lines[i].replace(/^\s*&gt;\s*/,'').replace(/^\s*>\s*/,''));i++;}
+      out.push('<blockquote>'+q.map(function(b){return inline(b);}).join('<br>')+'</blockquote>');
+      continue;
+    }
+    /* 列表 */
+    if(/^\s*[-*+]\s+/.test(line)||/^\s*\d+\.\s+/.test(line)){
+      var isOl=/^\s*\d+\.\s+/.test(line);
+      var items=[];
+      while(i<lines.length){
+        var m=lines[i].match(/^\s*[-*+]\s+(.*)$/)||lines[i].match(/^\s*\d+\.\s+(.*)$/);
+        if(!m)break;
+        items.push('<li>'+inline(m[1])+'</li>');i++;
+      }
+      out.push('<'+(isOl?'ol':'ul')+'>'+items.join('')+'</'+(isOl?'ol':'ul')+'>');
+      continue;
+    }
+    /* 空行 */
+    if(/^\s*$/.test(line)){out.push('');i++;continue;}
+    /* 普通段落 */
+    var para=[line];i++;
+    while(i<lines.length&&!/^\s*$/.test(lines[i])&&!/^(#{1,6})\s/.test(lines[i])&&!/^\s*[-*+]\s/.test(lines[i])&&!/^\s*\d+\.\s/.test(lines[i])&&!/^\s*&gt;/.test(lines[i])&&!/^\s*>/.test(lines[i])&&!/^\s*```/.test(lines[i])&&!/^\s*(---+|\*\*\*+)\s*$/.test(lines[i])&&lines[i].trim().indexOf('|')!==0){
+      para.push(lines[i]);i++;
+    }
+    out.push('<p>'+para.map(function(b){return inline(b);}).join('<br>')+'</p>');
+  }
+  return out.join('\n');
+}
+
+/* ---------- 教学数据 ---------- */
+var lessons=[
+  {name:'标题',desc:'用 # 开头写标题，# 越多级别越小。一级标题常用于文章大标题，二级做章节。',
+   code:'# 一级标题（像日记的日期）\n## 二级标题（像章节）\n### 三级标题（像小分节）'},
+  {name:'加粗 / 斜体 / 删除线',desc:'给文字加重点。写日记时强调心情或划掉不想留的内容。',
+   code:'**加粗强调**\n*斜体表达*\n~~删除线（划掉）~~'},
+  {name:'列表',desc:'无序列表用 - 或 *，有序列表用数字加点。适合列待办、清单。',
+   code:'- 早起喝杯水\n- 背 30 个单词\n- 复盘今天\n\n1. 第一件事\n2. 第二件事\n3. 第三件事'},
+  {name:'链接',desc:'[文字](网址) 把文字变成可点击的链接。',
+   code:'[点我打开 B 站](https://www.bilibili.com)\n\n图片则用 ![描述](图片网址)：\n![示例图片](https://picsum.photos/seed/md/300/160)'},
+  {name:'引用',desc:'行首加 > 表示引用别人的话，或标记自己的心情语录。',
+   code:'> 今天天气很好，适合学习。\n> —— 今天的我'},
+  {name:'代码',desc:'行内代码用反引号 \`\` 包住；多行代码块用三个反引号包住，可在后面写语言名。',
+   code:'行内代码：\`print("hi")\`\n\n代码块：\n```python\nprint("你好，世界")\n```'},
+  {name:'表格',desc:'用 | 分隔列，第二行用 --- 分隔表头和数据行。适合记账、打卡。',
+   code:'| 日期 | 事项 | 完成 |\n| --- | --- | --- |\n| 10-15 | 背单词 | ✅ |\n| 10-15 | 写日记 | ✅ |'},
+  {name:'分隔线与嵌套',desc:'用 --- 画一条分隔线；列表里可以缩进两格做嵌套子项。',
+   code:'早上：\n- 学习\n  - Markdown\n  - 英语\n- 运动\n\n---\n\n下面又是新的一节了'}
+];
+
+/* ---------- 渲染教学 ---------- */
+var lessonsBox=document.getElementById('lessons');
+lessons.forEach(function(l,idx){
+  var art=document.createElement('article');art.className='lesson';
+  var head=document.createElement('div');head.className='lesson-head';
+  var num=document.createElement('span');num.className='lesson-num';num.textContent=String(idx+1).padStart(2,'0');
+  var h=document.createElement('h2');h.textContent=l.name;
+  var btn=document.createElement('button');btn.className='copy-btn';btn.textContent='复制到日记';
+  btn.addEventListener('click',function(){copyToDiary(l.code,l.name);});
+  head.appendChild(num);head.appendChild(h);head.appendChild(btn);
+  var desc=document.createElement('p');desc.className='lesson-desc';desc.textContent=l.desc;
+  var body=document.createElement('div');body.className='lesson-body';
+  var codeBox=document.createElement('div');codeBox.className='lesson-code';
+  var pre=document.createElement('pre');
+  var codeEl=document.createElement('code');codeEl.textContent=l.code;
+  pre.appendChild(codeEl);codeBox.appendChild(pre);
+  var prev=document.createElement('div');prev.className='lesson-preview md-preview';
+  prev.innerHTML=renderMarkdown(l.code);
+  body.appendChild(codeBox);body.appendChild(prev);
+  art.appendChild(head);art.appendChild(desc);art.appendChild(body);
+  lessonsBox.appendChild(art);
+});
+
+/* ---------- Tab 切换 ---------- */
+document.querySelectorAll('.tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('is-active');});
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('is-active');});
+    tab.classList.add('is-active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('is-active');
+    if(tab.dataset.tab==='write'){updatePreview();editor.focus();}
+  });
+});
+
+/* ---------- 日记 ---------- */
+var editor=document.getElementById('editor');
+var preview=document.getElementById('preview');
+var STORAGE_KEY='moji-diary-draft-v1';
+
+function updatePreview(){
+  var v=editor.value;
+  preview.innerHTML=v.trim()?renderMarkdown(v):'<div class="preview-empty">在左边写点什么，这里会实时显示渲染效果。</div>';
+  var chars=v.replace(/\s/g,'').length;
+  document.getElementById('wordcount').textContent=chars+' 字';
+}
+function saveDraft(){localStorage.setItem(STORAGE_KEY,editor.value);}
+editor.addEventListener('input',function(){updatePreview();saveDraft();});
+
+/* 格式工具栏：一键插入 Markdown 符号 */
+document.querySelector('.fmtbar').addEventListener('click',function(e){
+  var btn=e.target.closest('.fmt-btn');
+  if(!btn)return;
+  var cmd=btn.dataset.cmd;
+  var v=editor.value,s=editor.selectionStart,e=editor.selectionEnd,sel=v.slice(s,e);
+  function wrap(before,after,ph){
+    var inner=sel||ph;
+    editor.setRangeText(before+inner+after,s,e,'end');
+  }
+  function prefix(pre){
+    var lineStart=v.lastIndexOf('\n',s-1)+1;
+    editor.setRangeText(pre,lineStart,lineStart,'end');
+  }
+  switch(cmd){
+    case 'h2':prefix('## ');break;
+    case 'bold':wrap('**','**','加粗文字');break;
+    case 'italic':wrap('*','*','斜体文字');break;
+    case 'ul':prefix('- ');break;
+    case 'ol':prefix('1. ');break;
+    case 'quote':prefix('> ');break;
+    case 'code':wrap('`','`','代码');break;
+    case 'codeblock':editor.setRangeText('```\n'+(sel||'代码')+'\n```',s,e,'end');break;
+    case 'table':editor.setRangeText('\n| 列1 | 列2 |\n| --- | --- |\n| 数据 | 数据 |\n',s,e,'end');break;
+    case 'hr':editor.setRangeText('\n\n---\n\n',s,e,'end');break;
+  }
+  updatePreview();saveDraft();editor.focus();
+  showToast('已插入：'+btn.textContent.trim());
+});
+
+function showToast(msg){
+  var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(showToast._t);showToast._t=setTimeout(function(){t.classList.remove('show');},1800);
+}
+function copyToDiary(code,name){
+  var sep=editor.value.trim()?'\n\n---\n\n':'';
+  editor.value+=sep+code+'\n';
+  updatePreview();saveDraft();
+  document.querySelector('[data-tab="write"]').click();
+  showToast('已把「'+name+'」示例复制到日记');
+}
+
+/* 插入今日日期 */
+document.getElementById('btn-date').addEventListener('click',function(){
+  var d=new Date();
+  var dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var insert='\n\n## '+dateStr+' 周'+'日一二三四五六'[d.getDay()]+'\n';
+  var pos=editor.selectionStart;
+  editor.setRangeText(insert,pos,editor.selectionEnd,'end');
+  updatePreview();saveDraft();editor.focus();
+  showToast('已插入日期');
+});
+
+/* 导出 .md：优先弹出系统保存窗口，可自选文件夹；浏览器不支持则回退下载 */
+document.getElementById('btn-export').addEventListener('click',async function(){
+  var text=editor.value.trim();
+  if(!text){showToast('日记还是空的，先写点内容');return;}
+  var d=new Date();
+  var dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var content='# 日记 '+dateStr+'\n\n'+text;
+  var fname='日记_'+dateStr+'.md';
+  if(window.showSaveFilePicker){
+    try{
+      var handle=await window.showSaveFilePicker({
+        suggestedName:fname,
+        types:[{description:'Markdown 文件',accept:{'text/markdown':['.md']}}]
+      });
+      var writable=await handle.createWritable();
+      await writable.write(content);
+      await writable.close();
+      showToast('已保存到「'+handle.name+'」');
+      return;
+    }catch(err){
+      if(err && err.name==='AbortError'){return;}
+    }
+  }
+  var blob=new Blob([content],{type:'text/markdown;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=fname;
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},100);
+  showToast('已导出 '+fname+'（存到浏览器默认下载文件夹）');
+});
+
+/* 放弃草稿：清空内容并丢弃缓存，不生成任何文件 */
+document.getElementById('btn-discard').addEventListener('click',function(){
+  if(!editor.value.trim()&&!localStorage.getItem(STORAGE_KEY)){return;}
+  if(confirm('放弃当前草稿？编辑器内容和浏览器缓存都会被清空，不会生成文件。')){
+    editor.value='';updatePreview();saveDraft();editor.focus();
+    showToast('已放弃草稿');
+  }
+});
+
+/* 清空 */
+document.getElementById('btn-clear').addEventListener('click',function(){
+  if(!editor.value.trim()){return;}
+  if(confirm('确定清空整篇日记？此操作不可恢复。')){
+    editor.value='';updatePreview();saveDraft();editor.focus();
+    showToast('已清空');
+  }
+});
+
+
+/* ---------- 今日餐盘（麦当劳 MCP 数据） ---------- */
+var MEAL_KEY='mcji-plate-v1';
+var NUTRI=null,plate=[];
+var REF={energy_kcal:2000,protein_g:60,fat_g:60,carb_g:300,sodium_mg:2000};
+
+function readSnapshot(){
+  var el=document.getElementById('nutrition-data');
+  if(!el){return null;}
+  try{return JSON.parse(el.textContent);}catch(e){return null;}
+}
+function fmt(n,d){
+  if(n===null||n===undefined||isNaN(n)){return '—';}
+  return Number(n).toFixed(d===undefined?0:d);
+}
+function renderSnapMeta(){
+  var box=document.getElementById('snap-meta');
+  if(!NUTRI){box.innerHTML='<span class="pill">未找到营养数据，请运行 tools/sync_nutrition.py</span>';return;}
+  var live=(NUTRI.source==='mcp');
+  var when=String(NUTRI.generated_at||'').replace('T',' ').slice(0,16);
+  box.innerHTML='<span class="pill '+(live?'live':'')+'">'+(live?'● 麦当劳 MCP 实时':'○ 离线演示快照')+'</span>'
+    +'<span class="pill">数据时间 '+when+'</span>'
+    +'<span class="pill">餐品 '+((NUTRI.items||[]).length)+' 项</span>';
+}
+function renderDishList(){
+  var box=document.getElementById('dish-list');
+  if(!NUTRI||!NUTRI.items||!NUTRI.items.length){
+    box.innerHTML='<div class="plate-empty">没有可用的餐品数据。</div>';return;
+  }
+  box.innerHTML='';
+  NUTRI.items.forEach(function(it){
+    var d=document.createElement('div');d.className='dish';
+    var nm=document.createElement('span');nm.className='nm';nm.textContent=it.name;
+    var kc=document.createElement('span');kc.className='kc';kc.textContent=fmt(it.energy_kcal)+' kcal';
+    var b=document.createElement('button');b.textContent='+';b.title='加入今日餐盘';
+    b.addEventListener('click',function(){addDish(it);});
+    d.appendChild(nm);d.appendChild(kc);d.appendChild(b);box.appendChild(d);
+  });
+}
+function addDish(it){
+  plate.push({code:it.code,name:it.name,energy_kcal:it.energy_kcal||0,protein_g:it.protein_g||0,
+              fat_g:it.fat_g||0,carb_g:it.carb_g||0,sodium_mg:it.sodium_mg||0,price_cny:it.price_cny||0});
+  savePlate();renderPlate();showToast('已加入：'+it.name);
+}
+function removeDish(i){plate.splice(i,1);savePlate();renderPlate();}
+function plateSum(){
+  return plate.reduce(function(a,b){return{
+    energy_kcal:a.energy_kcal+b.energy_kcal,protein_g:a.protein_g+b.protein_g,
+    fat_g:a.fat_g+b.fat_g,carb_g:a.carb_g+b.carb_g,sodium_mg:a.sodium_mg+b.sodium_mg,
+    price_cny:a.price_cny+b.price_cny};},
+    {energy_kcal:0,protein_g:0,fat_g:0,carb_g:0,sodium_mg:0,price_cny:0});
+}
+function renderPlate(){
+  var box=document.getElementById('plate-items');
+  if(!plate.length){
+    box.innerHTML='<div class="plate-empty">还没选东西。左边点「+」加入。</div>';
+  }else{
+    box.innerHTML='';
+    plate.forEach(function(p,i){
+      var row=document.createElement('div');row.className='plate-item';
+      var nm=document.createElement('span');nm.textContent=p.name;
+      var kc=document.createElement('span');kc.className='kc';kc.textContent=fmt(p.energy_kcal)+' kcal';
+      var x=document.createElement('button');x.className='x';x.textContent='×';x.title='移除';
+      x.addEventListener('click',function(){removeDish(i);});
+      row.appendChild(nm);row.appendChild(kc);row.appendChild(x);box.appendChild(row);
+    });
+  }
+  var s=plateSum();
+  var rows=[['热量',s.energy_kcal,'kcal',REF.energy_kcal],
+            ['蛋白质',s.protein_g,'g',REF.protein_g],
+            ['脂肪',s.fat_g,'g',REF.fat_g],
+            ['碳水',s.carb_g,'g',REF.carb_g],
+            ['钠',s.sodium_mg,'mg',REF.sodium_mg]];
+  var html='';
+  rows.forEach(function(r){
+    var pct=r[3]?(r[1]/r[3]*100):0;
+    var cls=pct>=100?'over':(pct>=80?'warn':'');
+    html+='<div class="nrow"><div class="lab"><span>'+r[0]+'</span><span>'+fmt(r[1])+' / '+r[3]+' '+r[2]+'</span></div>'
+        +'<div class="bar"><div class="fill '+cls+'" style="width:'+Math.min(100,pct)+'%"></div></div></div>';
+  });
+  if(plate.length){
+    html+='<div class="nrow"><div class="lab"><span>花费</span><span>¥'+fmt(s.price_cny,1)+'</span></div></div>';
+  }
+  document.getElementById('nutri-rows').innerHTML=html;
+}
+function savePlate(){try{localStorage.setItem(MEAL_KEY,JSON.stringify(plate));}catch(e){}}
+function loadPlate(){
+  try{var v=JSON.parse(localStorage.getItem(MEAL_KEY)||'[]');if(Array.isArray(v)){plate=v;}}catch(e){}
+}
+function renderCoupons(){
+  var box=document.getElementById('coupon-box');
+  var cs=(NUTRI&&NUTRI.coupons)||[];
+  if(!cs.length){box.innerHTML='';return;}
+  var html='<h2 style="font-size:1rem;margin-top:1.1rem">手上的券</h2><div class="coupon-list">';
+  cs.forEach(function(c){
+    html+='<div class="coupon"><b>'+c.name+'</b><span>'+(c.expire_text||'')+'</span></div>';
+  });
+  html+='</div>';
+  box.innerHTML=html;
+}
+function mealToDiary(){
+  if(!plate.length){showToast('餐盘是空的，先选两样');return;}
+  var s=plateSum();
+  var d=new Date();
+  var dateStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var src=(NUTRI&&NUTRI.source==='mcp')?'麦当劳 MCP 实时数据':'离线演示快照';
+  var L=[];
+  L.push('### 今日餐盘 '+dateStr);
+  L.push('');
+  L.push('| 餐品 | 热量 | 蛋白质 | 脂肪 | 碳水 | 钠 |');
+  L.push('| --- | --- | --- | --- | --- | --- |');
+  plate.forEach(function(p){
+    L.push('| '+p.name+' | '+fmt(p.energy_kcal)+' kcal | '+fmt(p.protein_g,1)+' g | '+fmt(p.fat_g,1)+' g | '+fmt(p.carb_g,1)+' g | '+fmt(p.sodium_mg)+' mg |');
+  });
+  L.push('| **合计** | **'+fmt(s.energy_kcal)+' kcal** | **'+fmt(s.protein_g,1)+' g** | **'+fmt(s.fat_g,1)+' g** | **'+fmt(s.carb_g,1)+' g** | **'+fmt(s.sodium_mg)+' mg** |');
+  L.push('');
+  L.push('- 花费合计：¥'+fmt(s.price_cny,1));
+  L.push('- 数据来源：'+src);
+  L.push('');
+  L.push('> 营养参考值按一般成人估算（2000 kcal / 蛋白质 60 g / 脂肪 60 g / 碳水 300 g / 钠 2000 mg），不构成医疗或营养建议。');
+  copyToDiary(L.join('\n'),'今日餐盘');
+}
+
+loadPlate();
+NUTRI=readSnapshot();
+renderSnapMeta();renderDishList();renderPlate();renderCoupons();
+document.getElementById('btn-meal-to-diary').addEventListener('click',mealToDiary);
+document.getElementById('btn-meal-reset').addEventListener('click',function(){
+  if(!plate.length){return;}
+  if(confirm('清空今日餐盘？')){
+    plate=[];savePlate();renderPlate();showToast('餐盘已清空');
+  }
+});
+
+/* 恢复草稿 */
+var draft=localStorage.getItem(STORAGE_KEY);
+if(draft){editor.value=draft;}
+updatePreview();
+</script>
+</body>
+</html>

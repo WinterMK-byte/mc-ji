@@ -1,0 +1,106 @@
+{
+  "source": "offline",
+  "source_label": "离线演示快照",
+  "items": [
+    {
+      "code": "big-mac",
+      "name": "巨无霸",
+      "category": "汉堡",
+      "energy_kcal": 550,
+      "protein_g": 25.0,
+      "fat_g": 30.0,
+      "carb_g": 42.0,
+      "sodium_mg": 950,
+      "price_cny": 25.0
+    },
+    {
+      "code": "mcchicken",
+      "name": "麦香鸡",
+      "category": "汉堡",
+      "energy_kcal": 400,
+      "protein_g": 15.0,
+      "fat_g": 21.0,
+      "carb_g": 39.0,
+      "sodium_mg": 700,
+      "price_cny": 14.0
+    },
+    {
+      "code": "spicy-chicken-burger",
+      "name": "麦辣鸡腿堡",
+      "category": "汉堡",
+      "energy_kcal": 500,
+      "protein_g": 22.0,
+      "fat_g": 25.0,
+      "carb_g": 45.0,
+      "sodium_mg": 1000,
+      "price_cny": 22.0
+    },
+    {
+      "code": "fries-m",
+      "name": "薯条（中）",
+      "category": "小食",
+      "energy_kcal": 340,
+      "protein_g": 4.0,
+      "fat_g": 16.0,
+      "carb_g": 44.0,
+      "sodium_mg": 250,
+      "price_cny": 12.0
+    },
+    {
+      "code": "nuggets-5",
+      "name": "麦乐鸡（5 块）",
+      "category": "小食",
+      "energy_kcal": 230,
+      "protein_g": 14.0,
+      "fat_g": 13.0,
+      "carb_g": 15.0,
+      "sodium_mg": 460,
+      "price_cny": 13.0
+    },
+    {
+      "code": "coke-m",
+      "name": "可口可乐（中）",
+      "category": "饮料",
+      "energy_kcal": 200,
+      "protein_g": 0.0,
+      "fat_g": 0.0,
+      "carb_g": 50.0,
+      "sodium_mg": 15,
+      "price_cny": 10.0
+    },
+    {
+      "code": "sundae",
+      "name": "朱古力圣代",
+      "category": "甜品",
+      "energy_kcal": 280,
+      "protein_g": 6.0,
+      "fat_g": 8.0,
+      "carb_g": 45.0,
+      "sodium_mg": 130,
+      "price_cny": 9.0
+    },
+    {
+      "code": "corn-cup",
+      "name": "玉米杯",
+      "category": "小食",
+      "energy_kcal": 100,
+      "protein_g": 3.0,
+      "fat_g": 2.0,
+      "carb_g": 19.0,
+      "sodium_mg": 150,
+      "price_cny": 10.0
+    }
+  ],
+  "coupons": [
+    {
+      "name": "示例券：满 30 减 5",
+      "expire_text": "演示数据"
+    },
+    {
+      "name": "示例券：中薯买一送一",
+      "expire_text": "演示数据"
+    }
+  ],
+  "note": "离线演示快照：数值为近似演示值，非麦当劳官方实时结果。设置 MCD_MCP_TOKEN 后重新运行可获取真实数据。",
+  "generated_at": "2026-10-22T14:32:28"
+}
